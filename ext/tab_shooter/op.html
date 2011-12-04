@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>Tab Shooter Options</title>
+<script>
+function restore_op() {
+    if (!localStorage.avgScore) {
+        localStorage.avgScore = 0;
+    }
+    document.getElementById("expect_sc").value = "" + localStorage.avgScore;
+}
+
+function save_op() {
+    // check input format
+    var s = parseInt(document.getElementById("expect_sc").value);
+    if (isNaN(s)) s = 0;
+    if (s < 0) s = 0;
+    if (s > 100) s = 100;
+    localStorage.avgScore = s;
+    chrome.browserAction.setBadgeText({text: "" + localStorage.avgScore});
+}
+
+</script>
+</head>
+<body onload="restore_op();">
+<table width="200px;">
+<tr>
+    <td style="width:90%;font-family:arial;font-size:12px;">Expected-Score: </td>
+    <td style="width:10%;"><input type="text" id="expect_sc" size="4"></input></td>
+</tr>
+<tr>
+    <td><button onclick="save_op();">save</button></td>
+</tr>
+</table>
+</body>
+</html>

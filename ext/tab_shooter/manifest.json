@@ -1,0 +1,24 @@
+{
+    "name": "Tab Shooter",
+    "version": "0.9",
+
+    "description": "we help you to find what you want in many tabs.",
+    "icons": {
+        "128": "res/icon128.png"
+    },
+
+    "browser_action": {
+        "default_icon": "res/icon128.png",
+        "default_title": "tab-shooter",
+        "default_popup": "op.html"
+    },
+
+    "background_page": "bg.html",
+    "options_page": "op.html",
+
+    "permissions": [
+        "tabs"
+    ],
+
+    "omnibox": { "keyword": "ts" }
+}

@@ -1,0 +1,118 @@
+<head>
+    <script type="text/javascript" src="com/zuki/chrome/omniMatch.js"></script>
+    <script>
+        (function() {
+
+        var affectRatio = 10;
+        var tabs = null;
+        console.log('mission.load');
+        var allmatch = [];
+
+        if (!localStorage.avgScore) {
+            localStorage.avgScore = 0;
+        }
+        chrome.browserAction.setBadgeText({text: "" + Math.round(localStorage.avgScore)});
+        chrome.browserAction.setBadgeBackgroundColor({color: [0, 255, 255, 255]});
+
+        function sort_match(a, b) {
+            if (a.score > b.score) return -1;
+            else if (a.score == b.score) return 0;
+            return 1;
+        }
+
+        function get_tab_info(wins) {
+            tabs = [];
+            for (var i in wins) {
+                for (var j in wins[i].tabs) {
+                    tabs = tabs.concat([
+                    {   
+                        "id": wins[i].tabs[j].id,
+                        "title": wins[i].tabs[j].title,
+                        "url": wins[i].tabs[j].url
+                    }]);
+                }
+            }
+            return tabs;
+        }
+
+        chrome.omnibox.onInputStarted.addListener(
+            function() {
+                console.log('mission start');
+                // capture all title & url from tabs
+                chrome.windows.getAll({populate: true},
+                    function(wins) {
+                        tabs = get_tab_info(wins);
+                    }
+                );
+            }
+        );
+        chrome.omnibox.onInputEntered.addListener(
+            function(t) {
+                tid = parseInt(t);
+                // find score
+                console.log('mission enter ' + allmatch.length);
+                for (var i in allmatch) {
+                    console.log('id ' + allmatch[i].id);
+                    if (allmatch[i].id == tid) {
+                        localStorage.avgScore = (localStorage.avgScore * (100 - affectRatio)+ allmatch[i].score * affectRatio) / 100;
+                        console.log('sc ' + allmatch[i].score + ' ' + localStorage.avgScore);
+                    }
+                }
+                chrome.browserAction.setBadgeText({text: "" + Math.round(localStorage.avgScore)});
+
+                tabs = null;
+                allmatch = [];
+
+                // switch to tab according to this tab id
+                chrome.tabs.update(tid, {selected: true});
+            }
+        );
+        chrome.omnibox.onInputChanged.addListener(
+            function(t, sf) {
+                if (tabs == null) return;
+                if (t.length == 0) return;
+                // reset allmatch
+                allmatch = [];
+
+                for (var i in tabs) {
+                    // creat match object for title
+                    var mTitle = new com.zuki.chrome.omniMatch(t, tabs[i].title);
+                    mTitle.convert2suggest("dim");
+
+                    // create match object for url
+                    var mUrl = new com.zuki.chrome.omniMatch(t, tabs[i].url);
+                    mUrl.convert2suggest("url");
+
+                    var o = mTitle.merge(mUrl);
+                    if (o.isMatch) {
+                        o.id = tabs[i].id;
+                        allmatch = allmatch.concat(o);
+                    }
+
+                    // release it to make sure not repeat
+                    delete o;
+                    o = null;
+                }
+
+                // sore result based on matching score
+                allmatch.sort(sort_match);
+                // convert allmatch to suggestion to chrome
+                var sugg = [];
+                for (var ii in allmatch) {
+                    sugg = sugg.concat({content: "" + allmatch[ii].id, description: allmatch[ii].s});
+                }
+
+                // return suggestion back to chrome
+                sf(sugg);
+            }
+        );
+
+        chrome.omnibox.onInputCancelled.addListener(
+            function() {
+                console.log('mission.cancel');
+            }
+        );
+
+        })();
+    </script>
+</head>
