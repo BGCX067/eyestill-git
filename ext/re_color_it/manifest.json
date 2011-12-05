@@ -1,0 +1,31 @@
+{
+    "name": "ReColorIt",
+    "version": "0.9.0.0",
+
+    "description": "re color your page by hotkey",
+    "icons": {
+        "128": "res/icon128.png"
+    },
+
+    "description": "we can grayish a page, we can also revert color of a page by hotkey",
+    "homepage_url": "http://code.google.com/p/eyestill/",
+
+    "browser_action": {
+        "default_icon": "res/icon128.png",
+        "default_title": "re-color-it",
+        "default_popup": "op.html"
+    },
+
+    "background_page": "bg.html",
+    "options_page": "op.html",
+
+    "content_scripts" : [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["cs.js"],
+            "
+        }
+    ],
+
+    "permissions": ["tabs", "http://*/*", "https://*/*"]
+}
