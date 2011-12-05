@@ -5,7 +5,6 @@
 
         var affectRatio = 10;
         var tabs = null;
-        console.log('mission.load');
         var allmatch = [];
 
         if (!localStorage.avgScore) {
@@ -37,7 +36,6 @@
 
         chrome.omnibox.onInputStarted.addListener(
             function() {
-                console.log('mission start');
                 // capture all title & url from tabs
                 chrome.windows.getAll({populate: true},
                     function(wins) {
@@ -50,12 +48,9 @@
             function(t) {
                 tid = parseInt(t);
                 // find score
-                console.log('mission enter ' + allmatch.length);
                 for (var i in allmatch) {
-                    console.log('id ' + allmatch[i].id);
                     if (allmatch[i].id == tid) {
                         localStorage.avgScore = (localStorage.avgScore * (100 - affectRatio)+ allmatch[i].score * affectRatio) / 100;
-                        console.log('sc ' + allmatch[i].score + ' ' + localStorage.avgScore);
                     }
                 }
                 chrome.browserAction.setBadgeText({text: "" + Math.round(localStorage.avgScore)});
@@ -73,6 +68,10 @@
                 if (t.length == 0) return;
                 // reset allmatch
                 allmatch = [];
+
+                // filter unsupported chars
+                t = t.replace(/[!@#$%\^&*\(\)<>\?+=\\\|;:\{\}\,\.\/~`\"\']/g, "");
+                t = t.replace(/\[\]/g, "");
 
                 for (var i in tabs) {
                     // creat match object for title
@@ -109,7 +108,6 @@
 
         chrome.omnibox.onInputCancelled.addListener(
             function() {
-                console.log('mission.cancel');
             }
         );
 
