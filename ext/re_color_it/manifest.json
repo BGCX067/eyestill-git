@@ -23,7 +23,7 @@
         {
             "matches": ["http://*/*", "https://*/*"],
             "js": ["cs.js"],
-            "
+            "run_at": "document_end"
         }
     ],
 
