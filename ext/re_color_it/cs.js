@@ -5,12 +5,6 @@
 var styleProp2check = [
     // background
     "backgroundColor",
-    // border/outline
-    "borderBottomColor",
-    "borderLeftColor",
-    "borderRightColor",
-    "borderTopColor",
-    "outlineColor",
     // text
     "color",
 ];
@@ -53,16 +47,18 @@ var qElm = [document.body];
 while (qElm.length) {
     // pop the front one as current element
     curElm = qElm.shift();
-    if (curElm.tagName == "li")
-        console.log(curElm.innerText);
 
     // check if there is style information in current element
-    s = window.getComputedStyle(curElm, null);
-    if (s) {
+    if ("style" in curElm) {
+        s = curElm.style;
         for (ip in styleProp2check) {
             if (styleProp2check[ip] in s) {
                 // revert it color
                 ss = s[styleProp2check[ip]];
+                if (ss.length == 0) {
+                    // this style property is defined but not assigned
+                    continue;
+                }
 
                 bMatch = false;
                 for (ci in clrIO) {
@@ -74,11 +70,8 @@ while (qElm.length) {
                         c[2] = 255 - c[2];
                         curElm.style[styleProp2check[ip]] = clrIO[ci].outf(c);
 
-                        if (styleProp2check[ip] == "color" && curElm.innerText == "The first summit of ") {
-                            console.log(clrIO[ci].outf(c));
-                        }
-
                         bMatch = true;
+                        console.log('match');
                         break;
                     }
                 }
@@ -91,7 +84,9 @@ while (qElm.length) {
     }
 
     for (i in curElm.childNodes) {
-        qElm.push(curElm.childNodes[i]);
+        if (curElm.childNodes[i].nodeType == 1) {
+            qElm.push(curElm.childNodes[i]);
+        }
     }
 }
 
