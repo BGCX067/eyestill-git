@@ -88,53 +88,57 @@ while (qElm.length) {
     // pop the front one as current element
     curElm = qElm.shift();
 
-    // check if there is style information in current element
-    if ("style" in curElm) {
-        s = curElm.style;
-        for (ip in styleProp2check) {
-            if (styleProp2check[ip] in s) {
-                // revert it color
-                ss = s[styleProp2check[ip]];
-                if (ss.length == 0) {
-                    // this style property is defined but not assigned
-                    continue;
-                }
-
-                sChanged = {};
-                for (ci in clrIO) {
-                    m = ss.match(clrIO[ci].re);
-                    if (m) {
-                        // before we modify it, we need to cache it original value
-                        // for caching, we need an id and assign one if this element doesn't have one.
-                        sChanged[styleProp2check[ip]] = ss;
-
-                        c = clrIO[ci].inf(m);
-                        c[0] = 255 - c[0];
-                        c[1] = 255 - c[1];
-                        c[2] = 255 - c[2];
-                        // TODO: we can keep the original/modified style in another style-sheet and
-                        // TODO: replace them via class property of element.
-                        // TODO: we also need to remove original style string in element
-                        curElm.style[styleProp2check[ip]] = clrIO[ci].outf(c);
-
-                        break;
-                    }
-                }
-
-                if (object.keys(sChanged).length == 0) {
-                    console.log("not match: " + ss);
-                } else {
-                    // TODO: cache the modified value
-                }
-            }
-        }
-    }
-
+    // insert all elements under this one
     for (i in curElm.childNodes) {
         // we are only interested in nodeType==1, which means Element
         if (curElm.childNodes[i].nodeType == 1) {
             qElm.push(curElm.childNodes[i]);
         }
+    }
+
+    // check if there is style information in current element
+    if (!("style" in curElm)) {
+        continue;
+    }
+
+    s = curElm.style;
+    for (ip in styleProp2check) {
+        if (!(styleProp2check[ip] in s)) {
+            continue;
+        }
+        // revert it color
+        ss = s[styleProp2check[ip]];
+        if (ss.length == 0) {
+            // this style property is defined but not assigned
+           continue;
+        }
+
+        sMatched = {};
+        for (ci in clrIO) {
+            m = ss.match(clrIO[ci].re);
+            if (m) {
+                // before we modify it, we need to cache it original value
+                // for caching, we need an id and assign one if this element doesn't have one.
+                sMatched[styleProp2check[ip]] = ss;
+
+                break;
+            }
+        }
+
+        if (object.keys(sMatched).length == 0) {
+            console.log("not match: " + ss);
+            continue;
+        }
+
+        // TODO: we can keep the original/modified style in another style-sheet and
+        // TODO: replace them via class property of element.
+
+        
+
+        // we need to remove original style string in element
+        curElm.style[styleProp2check[ip]] = "";
+
+        
     }
 }
 
