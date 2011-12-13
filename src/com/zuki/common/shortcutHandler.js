@@ -16,48 +16,98 @@ else if (typeof com.zuki.common != "object") {
 }
 
 if (!com.zuki.common.shortcutHandler) com.zuki.common.shortcutHandler = function() {
-    document.addEventListener("keypress", this.onkeypress);
-    document.addEventListener("keydown", this.onkeydown);
-    document.addEventListener("keyup", this.onkeyup);
+    this._fnMap = {"press": [], "up": [], "down":[]};
 
-    this._fnMap = {"press": [], "down": [], "up": []};
+    this._bPressAttached = false;
+    this._bDownAttached = false;
+    this._bUpAttached = false;
 }
 
-com.zuki.common.shortcutHandler.prototyle.addHandler = function(n, f) {
-    if (n in this._fnMap) {
-        this._fnMap[n] = this._fnMap[n].concat(f);
+com.zuki.common.shortcutHandler.prototype.addHandler = function(et, matchObj, func) {
+    if (et in this._fnMap) { 
+        this._fnMap[et] = this._fnMap[et].concat({m: matchObj, f:func});
+        switch(et) {
+            case "press":
+                if (this._bPressAttached == false) {
+                    document.addEventListener("keypress", this.onkeypress);
+                    this._bPressAttached = true;
+                }
+                break;
+            case "down":
+                if (this._bDownAttached == false) {
+                    document.addEventListener("keydown", this.onkeydown);
+                    this._bDownAttached = true;
+                }
+                breakl
+            case "up":
+                if (this._bUpAttached == false) {
+                    document.addEventListener("keyup", this.onkeyup);
+                    this._bUpAttached = true;
+                }
+                break;
+            default:
+                throw "com.zuki.common.shortcutHandler.prototype.addHandler: unknown event_type: " + et;
+        }
         return true;
     }
     return false;
 }
 
-com.zuki.commom.shortcutHandler.prototyle._genKeyboardObj = function(e) {
-    return {"sh": e.shiftKey, "ctl": e.ctrlKey, "alt": e.altKey, "mt": e.metaKey, "kc": e.keyCode, "cc": e.charCode};
-}
+com.zuki.common.shortcutHandler.prototype._isMatched = function(m, e) {
+    var bMatched  = true;
+    if ("special_key" in m) {
+        t = m.special_key.split(";");
+        for (var i in t) {
+            if (t[i].length > 1) {
+                switch (t[i]) {
+                    case "shift":
+                        bMatched = (e.shiftKey == false);
+                        break;
+                    case "ctrl":
+                        bMatched = (e.ctrlKey == false);
+                        break;
+                    case "alt":
+                        bMatched = (e.altKey == false);
+                        break;
+                    case "meta":
+                        bMatched = (e.metaKey == false);
+                        break;
+                    default:
+                        throw "com.zuki.common.shortcutHandler._isMatched: Unknown special key";
+                }
+            }
+        }
+    }
+    if (bMatched == false) return bMatched;
+
+    if ("kc" in m) {
+        if (typeof m.kc == "number") {
+            bMatched = (e.keycode == m.kc);
+        } else if (typeof m.kc == "string") {
+            if (m.kc.length > 1) throw "com.zuki.common.shortcutHandler._isMatched: keycode's length shouldn't be longer than 1."
+            bMatched = (m.kc == String.fromCharCode(e.keycode));
+        } else {
+            throw "com.zuki.common.shortcutHandler._isMatched: keycode should contain number or char.";
+        }
+    }
+
+    // TODO: no support on char-code and which now.
+
+    return bMatched;
+}   
 
 com.zuki.common.shortcutHandler.prototype.onkeypress = function(e) {
-    o = this._genKeyboardObj(e):
-    for(i in this._fnMap["press"]) {
-        if (0 == this._fnMap["press"][i](o) {
-            break;
-        }
+    for (i in this._fnMap.press) {
     }
 }
 
 com.zuki.common.shortcutHandler.prototype.onkeydown = function(e) {
-    o = this._genKeyboardObj(e):
-    for(i in this._fnMap["down"]) {
-        if (0 == this._fnMap["down"][i](o) {
-            break;
-        }
+    for (i in this._fnMap.down) {
     }
 }
 
 com.zuki.common.shortcutHandler.prototype.onkeyup = function(e) {
-    o = this._genKeyboardObj(e):
-    for(i in this._fnMap["up"]) {
-        if (0 == this._fnMap["up"][i](o) {
-            break;
-        }
+    for (i in this._fnMap.up) {
     }
 }
+
