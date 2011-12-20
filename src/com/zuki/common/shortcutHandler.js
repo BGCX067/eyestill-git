@@ -50,7 +50,7 @@ com.zuki.common.shortcutHandler.prototype.addHandler = function(et, matchObj, fu
                     document.addEventListener("keydown", this._onkeydown.bind(this));
                     this._bDownAttached = true;
                 }
-                breakl
+                break;
             case "up":
                 if (this._bUpAttached == false) {
                     document.addEventListener("keyup", this._onkeyup.bind(this));
@@ -92,7 +92,7 @@ com.zuki.common.shortcutHandler.prototype._isMatched = function(m, e) {
 
     if ("kc" in m) {
         if (typeof m.kc == "number") {
-            bMatched = (e.keycode == m.kc);
+            bMatched = (e.keyCode == m.kc);
         } else if (typeof m.kc == "string") {
             if (m.kc.length > 1) throw "com.zuki.common.shortcutHandler._isMatched: keycode's length shouldn't be longer than 1."
             bMatched = (m.kc == String.fromCharCode(e.keyCode).toLowerCase());
