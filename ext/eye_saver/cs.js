@@ -1,7 +1,7 @@
 (function() {
 
 //  test rectangle
-g_rec = {t:0, l:0, w:50, h:50};
+var g_rec = {t:0, l:0, w:50, h:50};
 
 function create_cover_rect(t, l, w, h, id, c) {
     // init 4 rectangles
@@ -18,6 +18,21 @@ create_cover_rect("0px", "30%", "40%", "20%", "top", "(255,0,0)");
 create_cover_rect("80%", "30%", "40%", "20%", "down", "(0,0,255)");
 
 rectName = {t:"top", d:"down", l:"left", r:"right"};
+
+var gCurElm = document.body;
+
+function getNextElm(elm, direction) {
+    if (direction == "up" && elm.parentElement) {
+        return elm.parentElement;
+    } else if (direction == "down" && elm.firstElementChild) {
+        return elm.firstElementChild;
+    } else if (direction == "left" && elm.previousElementSibling) {
+        return elm.previousElementSibling;
+    } else if (direction == "right" && elm.nextElementSibling) {
+        return elm.nextElementSibling;
+    }
+    return elm;
+}
 
 function adjust_cover_rect(curRec) {
     //  left
@@ -48,26 +63,30 @@ function adjust_cover_rect(curRec) {
 }
 
 h = new com.zuki.common.shortcutHandler();
-h.addHandler("down", {kc:40}, function() {
+h.addHandler("down", {special_key:"shift;ctrl", kc:40}, function() {
     //  down function
+    getNextElm(gCurElm, "down");
     g_rec.t += 2;
     adjust_cover_rect(g_rec);
     return true;
 });
-h.addHandler("down", {kc:38}, function() {
+h.addHandler("down", {special_key:"shift;ctrl", kc:38}, function() {
     //  up function
+    getNextElm(gCurElm, "up");
     g_rec.t -= 2;
     adjust_cover_rect(g_rec);
     return true;
 });
-h.addHandler("down", {kc:37}, function() {
+h.addHandler("down", {special_key:"shift;ctrl", kc:37}, function() {
     //  left function
+    getNextElm(gCurElm, "left");
     g_rec.l -= 2;
     adjust_cover_rect(g_rec);
     return true;
 });
-h.addHandler("down", {kc:39}, function() {
+h.addHandler("down", {special_key:"shift;ctrl", kc:39}, function() {
     //  right function
+    getNextElm(gCurElm, "right");
     g_rec.l += 2;
     adjust_cover_rect(g_rec);
     return true;
