@@ -22,16 +22,38 @@ rectName = {t:"top", d:"down", l:"left", r:"right"};
 var gCurElm = document.body;
 
 function getNextElm(elm, direction) {
-    if (direction == "up" && elm.parentElement) {
-        return elm.parentElement;
-    } else if (direction == "down" && elm.firstElementChild) {
-        return elm.firstElementChild;
-    } else if (direction == "left" && elm.previousElementSibling) {
-        return elm.previousElementSibling;
-    } else if (direction == "right" && elm.nextElementSibling) {
-        return elm.nextElementSibling;
+    var curNavFunc;
+    if (direction == "up") {
+        curNavFunc = function(e) { return e.; }
+    } else if (direction == "down") {
+        curNavFunc = function(e) { return e.firstElementChild; }
+    } else if (direction == "left") {
+        curNavFunc = function(e) { return e.previousElementSibling; }
+    } else if (direction == "right") {
+        curNavFunc = function(e) { return e.nextElementSibling; }
     }
+    if (typeof curNavFunc == "undefined") return elm;
+
+    var tmpElm = curNavFunc(elm);
+    while (tmpElm) {
+        if (tmpElm.offsetWidth && tmpElm.offsetHeight) {
+            console.log('next elm: ' + tmpElm.tagName);
+            return tmpElm;
+        }
+        tmpElm = curNavFunc(tmpElm);
+    }
+
+    console.log('next elm: ' + tmpElm.tagName);
     return elm;
+}
+
+function convertRect2MyRect(rec) {
+    var recMy = {};
+    recMy.t = rec.top;
+    recMy.l = rec.left;
+    recMy.w = rec.right - rec.left;
+    recMy.h = rec.bottom - rec.top;
+    return recMy;
 }
 
 function adjust_cover_rect(curRec) {
@@ -65,31 +87,40 @@ function adjust_cover_rect(curRec) {
 h = new com.zuki.common.shortcutHandler();
 h.addHandler("down", {special_key:"shift;ctrl", kc:40}, function() {
     //  down function
-    getNextElm(gCurElm, "down");
-    g_rec.t += 2;
+    gCurElm = getNextElm(gCurElm, "down");
+    if (gCurElm) {
+        g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
+    }
     adjust_cover_rect(g_rec);
     return true;
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:38}, function() {
     //  up function
-    getNextElm(gCurElm, "up");
-    g_rec.t -= 2;
+    gCurElm = getNextElm(gCurElm, "up");
+    if (gCurElm) {
+        g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
+    }
     adjust_cover_rect(g_rec);
     return true;
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:37}, function() {
     //  left function
-    getNextElm(gCurElm, "left");
-    g_rec.l -= 2;
+    gCurElm = getNextElm(gCurElm, "left");
+    if (gCurElm) {
+        g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
+    }
     adjust_cover_rect(g_rec);
     return true;
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:39}, function() {
     //  right function
-    getNextElm(gCurElm, "right");
-    g_rec.l += 2;
+    gCurElm = getNextElm(gCurElm, "right");
+    if (gCurElm) {
+        g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
+    }
     adjust_cover_rect(g_rec);
     return true;
 });
 
 })();
+
