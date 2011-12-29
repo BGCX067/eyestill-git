@@ -71,17 +71,49 @@ com.zuki.common.domNav.prototype.nextLevel = function() {
 
     // we need to find next visible child,
     // or child of the next sibling of current parent.
-    var curElm = this._cacheElmList[this._idxCache].firstChildElement;
-    while (curElm) {
-        if (this._isOk(curElm)) {
-            this._cacheElmList.push(curElm);
-            this._idxCache++;
-            return curElm;
+    var levelQ = [this._cacheElmList[this._idxCache]];
+    var curElm = this._cacheElmList[this._idxCache];
+    var tmpElm = curElm;
+    var levelBias = 1;
+    var bLoop = true;
+
+    do {
+        if (levelBias > 0) {
+            while (--levelBias >= 0) {
+                if (tmpElm.firstChildElement) {
+                    tmpELm = tmpElm.firstChildElement;
+                    if (levelBias != 0) {
+                        levelQ[levelBias] = tmpElm;
+                    }
+                } else {
+                    // there is no child on our way, need to go back, until we find next branch to seek
+                    while (levelBias < levelQ.length && !levelQ[levelBias].nextSibling) {
+                        levelBias++;
+                    }
+
+                    if (levelBias == levelQ.length) {
+                        // we need to go back one more level
+                        if (levelQ[levelBias - 1].parentElement) {
+                            levelQ.push(levelQ[levelBias - 1].parentElement);
+                        } else {
+                            // we've reached to root of DOM tree
+                            bLoop = false;
+                        }
+                    }
+
+                    break;
+            }
+        } else {
+            if (tmpElm.nextSibling) {
+                tmpElm = tmpElm.nextSibling;
+            } else {
+                // there is no sibling, go back to next parent to get more
+                levelBias = 1;
+            }
         }
 
-        curElm = curElm.nextSibling;
-    }
-
-    // we can't find one, return original one
-    return this._cacheElmList[this._idxCache];
+        if (levelBias == 0) {
+            // TODO: check tmpElm for it validity
+        }
+    } while (bLoop);
 }
