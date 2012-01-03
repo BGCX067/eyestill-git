@@ -2,6 +2,8 @@
 
 //  test rectangle
 var g_rec = {t:0, l:0, w:50, h:50};
+var g_nav = new com.zuki.common.domNav();
+g_nav.init(document.body);
 
 function create_cover_rect(t, l, w, h, id, c) {
     // init 4 rectangles
@@ -22,29 +24,17 @@ rectName = {t:"top", d:"down", l:"left", r:"right"};
 var gCurElm = document.body;
 
 function getNextElm(elm, direction) {
-    var curNavFunc;
     if (direction == "up") {
-        curNavFunc = function(e) { return e.; }
+        return g_nav.prevLevel();
     } else if (direction == "down") {
-        curNavFunc = function(e) { return e.firstElementChild; }
+        return g_nav.nextLevel();
     } else if (direction == "left") {
-        curNavFunc = function(e) { return e.previousElementSibling; }
+        return g_nav.prev();
     } else if (direction == "right") {
-        curNavFunc = function(e) { return e.nextElementSibling; }
-    }
-    if (typeof curNavFunc == "undefined") return elm;
-
-    var tmpElm = curNavFunc(elm);
-    while (tmpElm) {
-        if (tmpElm.offsetWidth && tmpElm.offsetHeight) {
-            console.log('next elm: ' + tmpElm.tagName);
-            return tmpElm;
-        }
-        tmpElm = curNavFunc(tmpElm);
+        return g_nav.next();
     }
 
-    console.log('next elm: ' + tmpElm.tagName);
-    return elm;
+    throw "unknown navigation-direction";
 }
 
 function convertRect2MyRect(rec) {

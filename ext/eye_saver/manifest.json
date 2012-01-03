@@ -21,7 +21,7 @@
     "content_scripts" : [
         {
             "matches": ["http://*/*", "https://*/*"],
-            "js": ["com/zuki/common/shortcutHandler.js", "cs.js"],
+            "js": ["com/zuki/common/domNav.js", "com/zuki/common/shortcutHandler.js", "cs.js"],
             "run_at": "document_end"
         }
     ],

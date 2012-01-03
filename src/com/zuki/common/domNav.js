@@ -46,16 +46,16 @@ com.zuki.common.domNav.prototype.init = function(elm, isOk) {
 }
 
 com.zuki.common.domNav.prototype.next = function(op) {
-   if (!this.rootElm) return this.rootElm;
+   if (!this.rootElm) return null;
 
 }
 
 com.zuki.common.domNav.prototype.prev = function(op) {
-   if (!this.rootElm) return this.rootElm;
+   if (!this.rootElm) return null;
 }
 
 com.zuki.common.domNav.prototype.prevLevel = function() {
-   if (!this.rootElm) return this.rootElm;
+   if (!this.rootElm) return null;
    if (this._idxCache <= 0) {
         return this._rootElm;
     }
@@ -64,7 +64,7 @@ com.zuki.common.domNav.prototype.prevLevel = function() {
 }
 
 com.zuki.common.domNav.prototype.nextLevel = function() {
-    if (!this.rootElm) return this.rootElm;
+    if (!this.rootElm) return null;
     if (this._idxCache < (this._cacheElmList.length - 1)) [
         return this._cacheElmList[++this._idxCache];
     }
@@ -74,12 +74,14 @@ com.zuki.common.domNav.prototype.nextLevel = function() {
     var levelQ = [this._cacheElmList[this._idxCache]];
     var curElm = this._cacheElmList[this._idxCache];
     var tmpElm = curElm;
+    var retElm = null;
     var levelBias = 1;
     var bLoop = true;
 
     do {
         if (levelBias > 0) {
-            while (--levelBias >= 0) {
+            while (--levelBias > 0) {
+                // we can find at least one child in this branch
                 if (tmpElm.firstChildElement) {
                     tmpELm = tmpElm.firstChildElement;
                     if (levelBias != 0) {
@@ -102,18 +104,29 @@ com.zuki.common.domNav.prototype.nextLevel = function() {
                     }
 
                     break;
+                }
             }
         } else {
             if (tmpElm.nextSibling) {
                 tmpElm = tmpElm.nextSibling;
             } else {
-                // there is no sibling, go back to next parent to get more
+                // there is no sibling, go back to next branch to get more
                 levelBias = 1;
             }
         }
 
         if (levelBias == 0) {
-            // TODO: check tmpElm for it validity
+            if (this._isOk(tmpElm)) {
+                bLoop = false;
+
+                retElm = tmpElm;
+                // copy levelQ to _cacheElmList
+                this._cacheElmList = this._cacheElmList.slice(0, this._cacheElmList.length - levelQ.length - 1).concat(levelQ);
+                this._cacheElmList.push(retElm);
+            } else {
+                // there is no more valid child in this branch, go back one level to see if we can find more.
+                levelBias = 1;
+            }
         }
     } while (bLoop);
 }
