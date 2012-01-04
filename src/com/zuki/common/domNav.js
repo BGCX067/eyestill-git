@@ -31,102 +31,108 @@ com.zuki.common.domNav.prototype._isVisible = function(elm) {
 
 com.zuki.common.domNav.prototype.init = function(elm, isOk) {
     if (!elm || (isOk && typeof isOk != "function")) {
-        this._rootElm = null;
+        this._root = null;
         this._cacheElmList = [];
     } else {
-        this._rootElm = elm;
-        this._cacheElmList = [elm];
+        this._root = elm;
+        this._stk = [elm];
         if (isOk) {
             this._isOk = isOk;
         } else {
             this._isOk = this._isVisible;
     }
-    this._idxCache = this._cacheElmList.length - 1;
+    this._idx = this._stk.length - 1;
     return elm;
 }
 
 com.zuki.common.domNav.prototype.next = function(op) {
-   if (!this.rootElm) return null;
+   if (!this._root) return null;
 
 }
 
 com.zuki.common.domNav.prototype.prev = function(op) {
-   if (!this.rootElm) return null;
+   if (!this._root) return null;
 }
 
 com.zuki.common.domNav.prototype.prevLevel = function() {
-   if (!this.rootElm) return null;
-   if (this._idxCache <= 0) {
-        return this._rootElm;
-    }
-
-    return this._cacheElmList[--this._idxCache];
+   if (!this._root) return null;
+   if (this._idx <= 0) {
+        return this._root;
+   }
 }
 
 com.zuki.common.domNav.prototype.nextLevel = function() {
-    if (!this.rootElm) return null;
-    if (this._idxCache < (this._cacheElmList.length - 1)) [
-        return this._cacheElmList[++this._idxCache];
-    }
+   if (!this._root) return null;
+   if (this._idx <= 0) {
+        return this._root;
+   }
+
+   if (this._idx < (this._stk.length - 1)) [
+        return this._stk[++this._idx];
+   }
+}
+
+com.zuki.common.domNav.prototype._levelBias = function(Q, QIdx, bias, fCheckFirst, fGoNext) {
+    if (typeof bias != "integer" || bias < 0) return null;
+    if (typeof QIdx != "integer" || QIdx < 0 || QIdx >= Q.length) return null;
+    if (typeof fCheckFirst != "function") throw "Not a function";
+    if (typeof fGoNext != "function") throw "Not a function";
 
     // we need to find next visible child,
     // or child of the next sibling of current parent.
-    var levelQ = [this._cacheElmList[this._idxCache]];
-    var curElm = this._cacheElmList[this._idxCache];
-    var tmpElm = curElm;
-    var retElm = null;
-    var levelBias = 1;
+    var totalBias = bias + Q.length - QIdx - 1;
+    var curBias = QIdx;
+    var elm = stk[stkBIdx];
+    var levelQ = new Array(totalBias + 1 - Q.length);
+    levelQ = Q.concat(levelQ);
     var bLoop = true;
 
     do {
-        if (levelBias > 0) {
-            while (--levelBias > 0) {
-                // we can find at least one child in this branch
-                if (tmpElm.firstChildElement) {
-                    tmpELm = tmpElm.firstChildElement;
-                    if (levelBias != 0) {
-                        levelQ[levelBias] = tmpElm;
-                    }
-                } else {
+        if (curBias < totalBias) {
+            while (curBias < totalBias) {
+                // we need to go down the tree
+                elm = fCheckFirst(levelQ[curBias]);
+                // we can't find a child or this child is checked.
+                if (elm == null || elm == levelQ[curBias + 1]) {
                     // there is no child on our way, need to go back, until we find next branch to seek
-                    while (levelBias < levelQ.length && !levelQ[levelBias].nextSibling) {
-                        levelBias++;
-                    }
-
-                    if (levelBias == levelQ.length) {
-                        // we need to go back one more level
-                        if (levelQ[levelBias - 1].parentElement) {
-                            levelQ.push(levelQ[levelBias - 1].parentElement);
-                        } else {
-                            // we've reached to root of DOM tree
-                            bLoop = false;
+                    while (--curBias > 0) {
+                        elm = fGoNext(levelQ[curBias]);
+                        if (elm) {
+                            levelQ[curBias] = elm;
+                            break;
                         }
                     }
 
+                    if (curBias == 0) {
+                        // we've reached to root of DOM tree
+                        bLoop = false;
+                    }
                     break;
+ 
+                } else {
+                    levelQ[++curBias] = elm;
                 }
             }
         } else {
-            if (tmpElm.nextSibling) {
-                tmpElm = tmpElm.nextSibling;
-            } else {
+            elm = fGoNext(elm);
+            if (!elm) {
                 // there is no sibling, go back to next branch to get more
-                levelBias = 1;
+                curBias--;
             }
         }
 
-        if (levelBias == 0) {
-            if (this._isOk(tmpElm)) {
+        if (curBias == totalBias) {
+            if (this._isOk(elm)) {
                 bLoop = false;
-
-                retElm = tmpElm;
-                // copy levelQ to _cacheElmList
-                this._cacheElmList = this._cacheElmList.slice(0, this._cacheElmList.length - levelQ.length - 1).concat(levelQ);
-                this._cacheElmList.push(retElm);
             } else {
                 // there is no more valid child in this branch, go back one level to see if we can find more.
-                levelBias = 1;
+                curBias--;
             }
         }
     } while (bLoop);
+
+    if (curBias == totalBias) {
+        return {elmQ:levelQ, e:elm};
+    }
+    return null;
 }
