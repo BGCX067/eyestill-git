@@ -32,7 +32,7 @@ com.zuki.common.domNav.prototype._isVisible = function(elm) {
 com.zuki.common.domNav.prototype.init = function(elm, isOk) {
     if (!elm || (isOk && typeof isOk != "function")) {
         this._root = null;
-        this._cacheElmList = [];
+        this._stk = [];
     } else {
         this._root = elm;
         this._stk = [elm];
@@ -46,30 +46,66 @@ com.zuki.common.domNav.prototype.init = function(elm, isOk) {
 }
 
 com.zuki.common.domNav.prototype.next = function(op) {
-   if (!this._root) return null;
+    if (!this._root) return null;
 
+    ret = this._levelBias(this._stk, this._idx, 0,
+        function(elm) { return elm.firstChildElement; },
+        function(elm) { return elm.nextSibling; }
+    );
+    if (ret) {
+        this._stk = ret.elmQ;
+    }
+
+    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.prev = function(op) {
    if (!this._root) return null;
+
+   ret = this._levelBias(this._stk, this._idx, 0,
+       function(elm) { return elm.lastChildElement; },
+       function(elm) { return elm.prevSibling; }
+   );
+   if (ret) {
+       this._stk = ret.elmQ;
+   }
+
+   return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.prevLevel = function() {
-   if (!this._root) return null;
-   if (this._idx <= 0) {
+    if (!this._root) return null;
+    if (this._idx < 0) {
         return this._root;
-   }
+    }
+
+    if (this._idx > 0) {
+        this._idx--;
+    }
+    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.nextLevel = function() {
-   if (!this._root) return null;
-   if (this._idx <= 0) {
+    if (!this._root) return null;
+    if (this._idx <= 0) {
         return this._root;
-   }
+    }
 
-   if (this._idx < (this._stk.length - 1)) [
-        return this._stk[++this._idx];
-   }
+    if (this._idx >= this._stk.length) {
+        ret = this._levelBias(this._stk, this._idx, 1,
+            function(elm) { return elm.firstChildElement; },
+            function(elm) { return elm.nextSibling; }
+        );
+
+        if (ret) {
+            this._stk = ret.elmQ;
+            this._idx++;
+        }
+    } else {
+        this._idx++;
+    }
+
+    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype._levelBias = function(Q, QIdx, bias, fCheckFirst, fGoNext) {
