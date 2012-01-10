@@ -26,63 +26,19 @@ com.zuki.common.domNav.prototype._isVisible = function(elm) {
     return true;
 }
 
-com.zuki.common.domNav.prototype.init = function(elm, isOk) {
-    if (!elm || (isOk && typeof isOk != "function")) {
-        this._root = null;
-        this._stk = [];
-    } else {
-        this._root = elm;
-        this._stk = [elm];
-        if (isOk) {
-            this._isOk = isOk;
-        } else {
-            this._isOk = this._isVisible;
-        }
-    }
-    this._idx = this._stk.length - 1;
-    return elm;
+com.zuki.common.domNav.prototype.init = function(elm) {
+    this._trc = [];
+    this._isOk = this._isVisible;
+    this._idx = this._trc.length - 1;
 }
 
 com.zuki.common.domNav.prototype.next = function(op) {
-    if (!this._root) return null;
-
-    ret = this._levelBias(this._stk, this._idx, 0,
-        function(elm) { return elm.firstElementChild; },
-        function(elm) { return elm.nextElementSibling; }
-    );
-    if (ret) {
-        this._stk = ret.elmQ;
-        this._idx = ret.idx;
-    }
-
-    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.prev = function(op) {
-    if (!this._root) return null;
-
-    ret = this._levelBias(this._stk, this._idx, 0,
-        function(elm) { return elm.lastElementChild; },
-        function(elm) { return elm.previousElementSibling; }
-    );
-    if (ret) {
-        this._stk = ret.elmQ;
-        this._idx = ret.idx;
-    }
-
-    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.prevLevel = function() {
-    if (!this._root) return null;
-    if (this._idx < 0) {
-        return this._root;
-    }
-
-    if (this._idx > 0) {
-        this._idx--;
-    }
-    return this._stk[this._idx];
 }
 
 com.zuki.common.domNav.prototype.nextLevel = function() {
@@ -113,16 +69,66 @@ com.zuki.common.domNav.prototype.nextLevel = function() {
         );
 
         if (ret) {
-            this._stk = ret.elmQ;
-            this._idx = ret.idx;
+            var bias = this._mergeTrace(this._trc, ret.trace)
+            this._trc = ret.elmQ;
+            this._idx = xxxxxxxxxxxxxxx;
         }
-    } else if (this._idx < this._stk.length) {
+    } else if (this._idx < this._trc.length) {
         this._idx++;
     } else {
         throw "Unknown case";
     }
 
-    return this._stk[this._idx];
+    return this._trc[this._idx];
+}
+
+com.zuki.common.domNav._mergeTrace(src, target) {
+    // TODO: give the caller how to re-mapping their original index
+    var i, j, k;
+    var elm;
+    var rangeFrom = {b:[-1. -1], e:[-1, -1]};
+    var stopLoop = false;
+
+    // find range of overlap
+    for (i == 0; i < src.length; i++) {
+        elm = src[i];
+        for (j = 0; j < target.length; j++) {
+            if (target[j] === elm) {
+                range.b[0] = range.e[0] = i;
+                range.b[1] = range.e[1] = j;
+
+                k = 1;
+                while ((i + k) < src.length && (j + k) < target.length) {
+                    if (src[i + k] === target[j + k]) {
+                        range.e[0] = i + k;
+                        range.e[1] = j + k;
+                    } else {
+                        break;
+                    }
+                    k++;
+                }
+                stopLoop = true;
+                break;
+            }
+        }
+
+        if (stopLoop == true) break;
+    }
+
+    if (range.b[0] == -1 && range.b[1] == -1 && range.e[0] == -1 && range.e[1] == -1) {
+        // nothing in common
+        target = src;
+    } else if (range.b[0] == -1 || range.b[1] == -1 || range.e[0] == -1 || range.e[1] == -1) {
+        throw "Unknown case";
+    } else {
+        // need to merge, favor target in array-begin(because they represent top of tree)
+        // and favor src in other side.
+        var tmp = (range.b[0] < range.b[1]) ? target.slice(0, range.b[1] - 1) : [];
+        target = tmp.concat(src.slice(range.b[0]));
+        return range.b[1] - range.b[0]; // return index bias 
+    }
+
+    return -1;
 }
 
 com.zuki.common.domNav._navigate(e, bForward, f) {
@@ -212,72 +218,8 @@ com.zuki.common.domNav._navigate(e, bForward, f) {
 
     // check if we found something
     if (ret.found == true) {
-        return {e:elm, b:curBias};
-    }
-    return null;
-}
-
-com.zuki.common.domNav.prototype._ = function(bias, fCheckFirst, fGoNext) {
-    if (typeof bias != "number" || bias < 0) throw "Not a correct integer";
-    if (typeof QIdx != "number" || QIdx < 0 || QIdx >= Q.length) throw "Not a correct integer";
-    if (typeof fCheckFirst != "function") throw "Not a function";
-    if (typeof fGoNext != "function") throw "Not a function";
-
-    // we need to find next visible child,
-    // or child of the next sibling of current parent.
-    var totalBias = bias + Q.length - 1;
-    var curBias = QIdx;
-    var elm = Q[QIdx];
-    var levelQ = new Array(totalBias + 1 - Q.length);
-    levelQ = Q.concat(levelQ);
-    var bLoop = true;
-
-    do {
-        if (curBias < totalBias) {
-            while (curBias < totalBias) {
-                // we need to go down the tree
-                elm = fCheckFirst(levelQ[curBias]);
-                // we can't find a child or this child is checked.
-                if (elm == null || elm == levelQ[curBias + 1]) {
-                    // there is no child on our way, need to go back, until we find next branch to seek
-                    while (curBias > 0) {
-                        curBias--;
-                        elm = fGoNext(levelQ[curBias]);
-                        if (elm) {
-                            levelQ[curBias] = elm;
-                            break;
-                        }
-                    }
-
-                    if (curBias == 0) {
-                        // we've reached to root of DOM tree
-                        bLoop = false;
-                    }
-                    break;
- 
-                } else {
-                    levelQ[++curBias] = elm;
-                }
-            }
-        } else {
-            elm = fGoNext(elm);
-            if (!elm) {
-                // there is no sibling, go back to next branch to get more
-                curBias--;
-            } else {
-                levelQ[curBias] = elm;
-            }
-        }
-
-        if (curBias == totalBias) {
-            if (this._isOk(elm)) {
-                bLoop = false;
-            }
-        }
-    } while (bLoop);
-
-    if (curBias == totalBias) {
-        return {elmQ:levelQ, e:elm, idx:curBias};
+        // TODO: clear Q that below elm, they are not cleared during traversing
+        return {e:elm, b:curBias, trace:Q};
     }
     return null;
 }
