@@ -26,114 +26,118 @@ com.zuki.common.domNav.prototype._isVisible = function(elm) {
     return true;
 }
 
-com.zuki.common.domNav.prototype.init = function(elm) {
+com.zuki.common.domNav.prototype.init = function() {
     this._trc = [];
     this._isOk = this._isVisible;
     this._idx = this._trc.length - 1;
 }
 
-com.zuki.common.domNav.prototype.next = function(op) {
+com.zuki.common.domNav.prototype.next = function() {
+    if (this._idx < 0 || this._idx >= this._trc.length) {
+        throw "Invalid this._idx";
+    } else if (this._idx != 0 ) {
+        var ret = this._navigate_call_helper(
+            this._trc[this._idx - 1],
+            true,
+            this._trc,
+            {smaller_than:Number.MIN_VALUE, bigger_than:1}
+        );
+        if (ret) {
+            this._trc = ret.trace;
+            this._idx = ret.b;
+        }
+    } else {
+        // root case
+    }
+
+    return this._trc[this._idx];
 }
 
-com.zuki.common.domNav.prototype.prev = function(op) {
+com.zuki.common.domNav.prototype.prev = function() {
+    if (this._idx < 0 || this._idx >= this._trc.length) {
+        throw "Invalid this._idx";
+    } else if (this._idx != 0 ) {
+        var ret = this._navigate_call_helper(
+            this._trc[this._idx - 1],
+            false,
+            this._trc,
+            {smaller_than:Number.MIN_VALUE, bigger_than:1}
+        );
+        if (ret) {
+            this._trc = ret.trace;
+            this._idx = ret.b;
+        }
+    } else {
+        // root case
+    }
+
+    return this._trc[this._idx];
 }
 
 com.zuki.common.domNav.prototype.prevLevel = function() {
+    if (this._idx < 0) {
+        throw "Invalid this._idx";
+    } else if (this._idx >= 0 && this._idx < this._trc.length) {
+        if (this._idx > 0) this._idx--;
+    } else {
+        throw "Invalid range of this._idx";
+    }
+
+    return this._trc[this._idx];
 }
 
 com.zuki.common.domNav.prototype.nextLevel = function() {
-    if (!this._root) return null;
-    if (this._idx < 0) {
-        return this._root;
-    }
-
-    if (this._idx == this._stk.length - 1) {
+    if (this._idx < 0 || this._idx >= this._trc.length) {
+        throw "Invalid this._idx";
+    } else if (this._idx == this._trc.length - 1) {
         // keep the size and position of current element for later comparison
-        var rec = this._stk[this._idx].getBoundingClientRect();
-        var s = {};
-        s.w = Math.round(rec.width);
-        s.h = Math.round(rec.height);
-
-        ret = this._levelBias(this._stk[this._idx], true,
-            function(e, b) {
-                var rec = {nextBranch: false, found: false, stop: false};
-                if (b >= 1) {
-                    // check if we want it
-                    var recIn = e.getBoundingClientRect();
-                    if (s.w != Math.round(recIn.width) || s.h != Math.round(rectIn.height)) {
-                        ret.found = true;
-                    }
-                }
-                return ret;
-            }
+        var ret = this._navigate_call_helper(
+            this._trc[this._idx],
+            true,
+            this._trc,
+            {smaller_than:Number.MIN_VALUE, bigger_than:1}
         );
-
         if (ret) {
-            var bias = this._mergeTrace(this._trc, ret.trace)
-            this._trc = ret.elmQ;
-            this._idx = xxxxxxxxxxxxxxx;
+            this._trc = ret.trace;
+            this._idx = ret.b;
         }
     } else if (this._idx < this._trc.length) {
-        this._idx++;
+        if (this._idx < this._trc.length -1) this._idx++;
     } else {
         throw "Unknown case";
     }
 
     return this._trc[this._idx];
 }
+com.zuki.common.domNav._navigate_call_helper(e, bForward, inQ, range_of_bias) {
+    var rec = e.getBoundingClientRect();
+    var s = {};
+    s.w = Math.round(rec.width);
+    s.h = Math.round(rec.height);
 
-com.zuki.common.domNav._mergeTrace(src, target) {
-    // TODO: give the caller how to re-mapping their original index
-    var i, j, k;
-    var elm;
-    var rangeFrom = {b:[-1. -1], e:[-1, -1]};
-    var stopLoop = false;
-
-    // find range of overlap
-    for (i == 0; i < src.length; i++) {
-        elm = src[i];
-        for (j = 0; j < target.length; j++) {
-            if (target[j] === elm) {
-                range.b[0] = range.e[0] = i;
-                range.b[1] = range.e[1] = j;
-
-                k = 1;
-                while ((i + k) < src.length && (j + k) < target.length) {
-                    if (src[i + k] === target[j + k]) {
-                        range.e[0] = i + k;
-                        range.e[1] = j + k;
-                    } else {
-                        break;
+    ret = this._navigate(e, bForward,
+        function(e, b) {
+            var rec = {nextBranch: false, found: false, stop: false};
+            if (range_of_bias.smaller_than == Number.MIN_VALUE || b <= range_of_bias.smaller_than) {
+                if (range_of_bias.bigger_than == Number.MAX_VALUE || b >= range_of_bias.bigger_than) {
+                    // check if we want it
+                    var recIn = e.getBoundingClientRect();
+                    if (s.w != Math.round(recIn.width) || s.h != Math.round(rectIn.height)) {
+                        ret.found = true;
                     }
-                    k++;
                 }
-                stopLoop = true;
-                break;
             }
-        }
+            return ret;
+        },
+        inQ 
+    );
 
-        if (stopLoop == true) break;
-    }
-
-    if (range.b[0] == -1 && range.b[1] == -1 && range.e[0] == -1 && range.e[1] == -1) {
-        // nothing in common
-        target = src;
-    } else if (range.b[0] == -1 || range.b[1] == -1 || range.e[0] == -1 || range.e[1] == -1) {
-        throw "Unknown case";
-    } else {
-        // need to merge, favor target in array-begin(because they represent top of tree)
-        // and favor src in other side.
-        var tmp = (range.b[0] < range.b[1]) ? target.slice(0, range.b[1] - 1) : [];
-        target = tmp.concat(src.slice(range.b[0]));
-        return range.b[1] - range.b[0]; // return index bias 
-    }
-
-    return -1;
+    return ret;
 }
 
 com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
     if (typeof f != "function") throw "Not a function";
-    if (elm == null) throw "elm can't be null";
+    if (e == null) throw "elm can't be null";
 
     var fFirst = null;
     var fNext = null;
@@ -146,6 +150,7 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
         fNext = function (elm) { return elm.previousElementChild; }
     }
 
+    // build initial element-queue
     var Q = [e];
     var oriBias = 0;
     if (inQ != null) {
@@ -164,7 +169,7 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
         }
     }
     
-    // build a queue for all parent
+    // build a queue for all parents
     var p = Q[0].parentNode;
     while (p) {
         oriBias++;
@@ -183,7 +188,8 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
     do {
         // proceeding the navigation
         if (nextBranch == false) {
-            elm = fDown(elm);
+            // TODO: we may need to utilize the existing trace
+            elm = fDown(Q[curBias]);
 
             if (elm == null || (Q.length > curBias + 1 && elm === Q[curBias]) {
                 // make sure we won't put this elm in other condition
@@ -220,6 +226,7 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
         }
 
         // check this item
+        // TODO: pass range of bias during this traverse to checking-function
         ret = f(elm, curBias - oriBias);
         if (ret.found == true) {
             // found!
@@ -236,8 +243,14 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
 
     // check if we found something
     if (ret.found == true) {
-        // TODO: clear Q that below elm, they are not cleared during traversing
-        return {e:elm, b:curBias, trace:Q};
+        // clear Q that below elm, they are not cleared during traversing
+        for (var i = curBias + 1; i < Q.length) {
+            if (Q[i].parentNode !== Q[i - 1]) {
+                Q = Q.slice(0, i);
+                break;
+            }
+        }
+        return {b:curBias, trace:Q};
     }
     return null;
 }
