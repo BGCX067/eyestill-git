@@ -36,6 +36,7 @@ com.zuki.common.domNav.prototype.next = function() {
     if (this._idx < 0 || this._idx >= this._trc.length) {
         throw "Invalid this._idx";
     } else if (this._idx != 0 ) {
+        // TODO: this code doesn't work, we didn't utilize existing trace during traverse.
         var ret = this._navigate_call_helper(
             this._trc[this._idx - 1],
             true,
@@ -57,6 +58,7 @@ com.zuki.common.domNav.prototype.prev = function() {
     if (this._idx < 0 || this._idx >= this._trc.length) {
         throw "Invalid this._idx";
     } else if (this._idx != 0 ) {
+        // TODO: this code doesn't work, we didn't utilize existing trace during traverse.
         var ret = this._navigate_call_helper(
             this._trc[this._idx - 1],
             false,
