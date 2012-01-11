@@ -131,7 +131,7 @@ com.zuki.common.domNav._mergeTrace(src, target) {
     return -1;
 }
 
-com.zuki.common.domNav._navigate(e, bForward, f) {
+com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
     if (typeof f != "function") throw "Not a function";
     if (elm == null) throw "elm can't be null";
 
@@ -146,21 +146,39 @@ com.zuki.common.domNav._navigate(e, bForward, f) {
         fNext = function (elm) { return elm.previousElementChild; }
     }
 
-    var Q = [];
+    var Q = [e];
+    var oriBias = 0;
+    if (inQ != null) {
+        var bFound = false;
+        //  check if e existin in inQ
+        for (; oriBias < inQ.length; oriBias++) {
+            if (inQ[oriBias] === e) {
+                bFound = true;
+                break;
+            }
+        }
+        if (bFound) {
+            Q = inQ;
+        } else {
+            return null;
+        }
+    }
+    
     // build a queue for all parent
-    var p = e;
-    do {
+    var p = Q[0].parentNode;
+    while (p) {
+        oriBias++;
         Q.unshift(p);
         p = p.parentNode;
-    } while (p);
+    }
 
     // this variable represents the preferred index in queue
-    var oriBias = Q.length - 1;
     var curBias = oriBias;
     var ret = null;
 
     var bLoop = false;
     var nextBranch = false;
+    var elm = e;
     // Depth-first search
     do {
         // proceeding the navigation
