@@ -118,12 +118,13 @@ com.zuki.common.domNav._navigate_call_helper(e, bForward, inQ, range_of_bias) {
     s.h = Math.round(rec.height);
 
     ret = this._navigate(e, bForward,
-        function(e, b) {
+        function(e, b, r) {
             var rec = {nextBranch: false, found: false, stop: false};
             if (range_of_bias.smaller_than == Number.MIN_VALUE || b <= range_of_bias.smaller_than) {
                 if (range_of_bias.bigger_than == Number.MAX_VALUE || b >= range_of_bias.bigger_than) {
                     // check if we want it
                     var recIn = e.getBoundingClientRect();
+                    // if element-size is changed, then we found one.
                     if (s.w != Math.round(recIn.width) || s.h != Math.round(rectIn.height)) {
                         ret.found = true;
                     }
@@ -182,6 +183,7 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
     // this variable represents the preferred index in queue
     var curBias = oriBias;
     var ret = null;
+    var range = {max:0, min:0};
 
     var bLoop = false;
     var nextBranch = false;
@@ -230,9 +232,12 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
             }
         }
 
+        // update traversing-range
+        if (curBias < range.min) range.min = curBias;
+        if (curBias > range.max) range.max = curBias;
+
         // check this item
-        // TODO: pass range of bias during this traverse to checking-function
-        ret = f(elm, curBias - oriBias);
+        ret = f(elm, curBias - oriBias, range);
         if (ret.found == true) {
             // found!
             bLoop = false;
