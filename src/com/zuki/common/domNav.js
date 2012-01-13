@@ -190,12 +190,15 @@ com.zuki.common.domNav._navigate(e, bForward, f, inQ) {
     do {
         // proceeding the navigation
         if (nextBranch == false) {
-            // TODO: we may need to utilize the existing trace
-            elm = fDown(Q[curBias]);
+            // we may need to utilize the existing trace
+            if (curBias + 1 < Q.length && Q[curBias + 1].parentNode === elm) {
+                elm = fNext(Q[curBias + 1]);
+            } else {
+                elm = fDown(Q[curBias]);
+            }
 
-            if (elm == null || (Q.length > curBias + 1 && elm === Q[curBias]) {
+            if (elm == null) {
                 // make sure we won't put this elm in other condition
-                elm = null;
                 nextBranch = true;
                 continue;
             } else {
