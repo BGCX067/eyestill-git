@@ -16,19 +16,21 @@ else if (typeof com.zuki.common != "object") {
 }
 
 if (!com.zuki.common.domNav) com.zuki.common.domNav = function() {
+    this._bInited = false;
     this.init();
 }
 
-com.zuki.common.domNav.prototype._isVisible = function(elm) {
-    if (!elm) return false;
-    if (elm.nodeType != 1) return false; // element node only
-    if (elm.offsetWidth == 0 || elm.offsetHeight == 0) return false;
-    return true;
-}
+com.zuki.common.domNav.prototype.init = function(elm) {
+    if (this._bInited == true) {
+        throw "Already Inited";
+    }
 
-com.zuki.common.domNav.prototype.init = function() {
-    this._trc = [];
-    this._isOk = this._isVisible;
+    if (typeof elm == "undefined") {
+        this._trc = [];
+    } else {
+        this._trc = [elm];
+        this._bInitied = true;
+    }
     this._idx = this._trc.length - 1;
 }
 
@@ -36,7 +38,7 @@ com.zuki.common.domNav.prototype.next = function() {
     if (this._idx < 0 || this._idx >= this._trc.length) {
         throw "Invalid this._idx";
     } else if (this._idx != 0 ) {
-        // TODO: this code doesn't work, we didn't utilize existing trace during traverse.
+        // utilize existing trace during traverse.
         var ret = this._navigate_call_helper(
             this._trc[this._idx - 1],
             true,
@@ -58,7 +60,7 @@ com.zuki.common.domNav.prototype.prev = function() {
     if (this._idx < 0 || this._idx >= this._trc.length) {
         throw "Invalid this._idx";
     } else if (this._idx != 0 ) {
-        // TODO: this code doesn't work, we didn't utilize existing trace during traverse.
+        // utilize existing trace during traverse.
         var ret = this._navigate_call_helper(
             this._trc[this._idx - 1],
             false,
@@ -70,7 +72,7 @@ com.zuki.common.domNav.prototype.prev = function() {
             this._idx = ret.b;
         }
     } else {
-        // root case
+        // root case, we do not change anything in this case.
     }
 
     return this._trc[this._idx];
@@ -80,7 +82,18 @@ com.zuki.common.domNav.prototype.prevLevel = function() {
     if (this._idx < 0) {
         throw "Invalid this._idx";
     } else if (this._idx >= 0 && this._idx < this._trc.length) {
-        if (this._idx > 0) this._idx--;
+        // we need to find one parent node that
+        // itsits size is different from current element.
+        var ret = this._navigate_call_helper(
+            this._trc[this._idx],
+            false,
+            this._trc,
+            {smaller_than:-1, bigger_than:Number.MAX_VALUE}
+        }
+        if (ret) {
+            this._trc = ret.trace;
+            this._idx = ret.b;
+        }
     } else {
         throw "Invalid range of this._idx";
     }
@@ -111,6 +124,7 @@ com.zuki.common.domNav.prototype.nextLevel = function() {
 
     return this._trc[this._idx];
 }
+
 com.zuki.common.domNav._navigate_call_helper(e, bForward, inQ, range_of_bias) {
     var rec = e.getBoundingClientRect();
     var s = {};

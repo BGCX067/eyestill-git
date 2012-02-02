@@ -23,7 +23,7 @@ rectName = {t:"top", d:"down", l:"left", r:"right"};
 
 var gCurElm = document.body;
 
-function getNextElm(elm, direction) {
+function getNextElm(direction) {
     if (direction == "up") {
         return g_nav.prevLevel();
     } else if (direction == "down") {
@@ -77,7 +77,7 @@ function adjust_cover_rect(curRec) {
 h = new com.zuki.common.shortcutHandler();
 h.addHandler("down", {special_key:"shift;ctrl", kc:40}, function() {
     //  down function
-    gCurElm = getNextElm(gCurElm, "down");
+    gCurElm = getNextElm("down");
     if (gCurElm) {
         g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
     }
@@ -86,7 +86,7 @@ h.addHandler("down", {special_key:"shift;ctrl", kc:40}, function() {
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:38}, function() {
     //  up function
-    gCurElm = getNextElm(gCurElm, "up");
+    gCurElm = getNextElm("up");
     if (gCurElm) {
         g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
     }
@@ -95,7 +95,7 @@ h.addHandler("down", {special_key:"shift;ctrl", kc:38}, function() {
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:37}, function() {
     //  left function
-    gCurElm = getNextElm(gCurElm, "left");
+    gCurElm = getNextElm("left");
     if (gCurElm) {
         g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
     }
@@ -104,7 +104,7 @@ h.addHandler("down", {special_key:"shift;ctrl", kc:37}, function() {
 });
 h.addHandler("down", {special_key:"shift;ctrl", kc:39}, function() {
     //  right function
-    gCurElm = getNextElm(gCurElm, "right");
+    gCurElm = getNextElm("right");
     if (gCurElm) {
         g_rec = convertRect2MyRect(gCurElm.getBoundingClientRect());
     }
